@@ -1,0 +1,4 @@
+interface:
+  display_name: "Boost Agent Outcomes"
+  short_description: "Improve coding-agent plans and results"
+  default_prompt: "Use $boost-agent-outcomes to assess these coding-agent outputs, identify weak reasoning and missing work, and synthesize a stronger outcome."
