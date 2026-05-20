@@ -1,0 +1,4 @@
+interface:
+  display_name: "Refine Prompt"
+  short_description: "Clarify and rewrite prompts for agents"
+  default_prompt: "Use $refine-prompt to refine this feature prompt before I give it to a coding agent."
