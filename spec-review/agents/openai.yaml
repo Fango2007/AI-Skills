@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Review"
+  short_description: "Evaluate specs against engineering criteria"
+  default_prompt: "Use $spec-review to review this technical specification for quality, gaps, risks, and readiness."
