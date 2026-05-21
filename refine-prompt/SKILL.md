@@ -1,49 +1,45 @@
 ---
 name: refine-prompt
-description: Refine user-written prompts into clear, precise English with explicit intent, constraints, scope, and success criteria. Use when the user asks Codex to improve, clarify, rewrite, disambiguate, or strengthen a prompt; when the user is not a native English speaker and wants better wording; when a prompt for a coding agent, AI agent, feature request, Spec Kit/specification workflow, implementation request, review request, or task brief may be vague, ambiguous, or likely to make an agent infer missing details; or when the user wants clarifying questions before finalizing a prompt.
+description: Refine user-written prompts into clear, idiomatic English while preserving the user's original intent, scope, and level of detail. Use when the user asks Codex to improve, clarify, rewrite, disambiguate, or strengthen a prompt; when the user is not a native English speaker and wants better wording; when a prompt for a coding agent, AI agent, feature request, Spec Kit/specification workflow, implementation request, review request, or task brief needs clearer language without adding new requirements or technical choices; or when the user wants clarifying questions before finalizing a prompt.
 ---
 
 # Refine Prompt
 
 ## Goal
 
-Transform the user's draft into a prompt that another AI agent can execute with minimal inference. Improve English, collocations, grammar, structure, and precision without changing the user's intended meaning.
+Transform the user's draft into a clearer prompt. Improve English, collocations, grammar, structure, and precision without changing the user's intended meaning or adding content the user did not provide.
 
 Use the broader `refine-prompt` behavior for any prompt-writing issue. For coding-agent feature prompts, apply the stricter feature workflow below.
 
 ## Core Workflow
 
-1. Identify the target agent, task type, desired output, and any explicit constraints.
-2. Detect ambiguity, missing facts, vague words, hidden assumptions, conflicting requirements, and places where an agent would need to infer intent.
-3. Ask concise clarifying questions when required facts are missing. Do not finalize a prompt that still depends on a product, workflow, data, policy, or acceptance decision the user has not provided.
-4. If the draft is clear enough, rewrite it in natural, precise English.
-5. Preserve the user's intent and level of abstraction. Do not add technical decisions, requirements, examples, or constraints unless they are stated by the user or clearly labeled as optional questions.
+1. Identify the prompt's subject, intent, and explicitly stated requirements.
+2. Improve wording, sentence structure, grammar, terminology, and readability.
+3. Remove ambiguity only when it can be removed by rephrasing the user's existing content.
+4. Preserve unresolved details as unresolved. Do not fill gaps with assumptions, examples, acceptance criteria, constraints, or agent-facing instructions.
+5. Ask concise clarifying questions only when the prompt cannot be faithfully rewritten without choosing between multiple possible meanings.
 
 ## Clarification Rules
 
-Ask questions before rewriting when any of these are unclear:
+Ask questions before rewriting only when the user's wording has multiple plausible meanings and a rewrite would change the intended content.
 
-- The real objective or user problem.
-- The target user, actor, or system boundary.
-- Required behavior, edge cases, or acceptance criteria.
-- Inputs, outputs, states, permissions, error handling, or data retention.
-- Scope, non-goals, dependencies, or sequencing.
-- The expected deliverable format.
-- Any phrase such as "simple", "better", "optimized", "intuitive", "robust", "fast", "secure", "modern", "user-friendly", "as needed", or "etc." without concrete meaning.
+Do not ask questions merely because a feature description omits details that another workflow step may define later, such as actors, edge cases, acceptance criteria, permissions, data retention, imports, exports, or non-goals.
 
-Keep questions focused. Prefer 3-7 questions. If there are many gaps, ask only the questions needed to remove the biggest inference risks first.
+Do not infer what the receiving agent expects. Do not add meta-instructions such as "keep this functional", "do not make technical choices", or "provide acceptance criteria" unless the user included that instruction in the draft.
+
+Keep questions focused. Prefer 1-5 questions. If the user says another workflow step will resolve open points, refine the prompt without blocking and preserve those open points as written.
 
 ## Feature Prompt Rules
 
 When refining a feature description for a coding agent or Spec Kit-style workflow:
 
 - Keep the prompt functional and product-oriented.
-- Describe what the feature must do and how users should experience it.
-- Include actors, user goals, main flows, alternate flows, validation rules, error states, permissions, and acceptance criteria when known.
-- Include explicit non-goals when the draft implies boundaries.
-- Do not choose architecture, frameworks, libraries, database schemas, API designs, file structures, implementation patterns, or test frameworks unless the user already provided them.
-- Do not turn the feature prompt into an implementation plan.
-- Replace vague feature language with observable behavior.
+- Preserve the user's stated requirements and level of detail.
+- Rephrase vague wording only as far as the original meaning supports.
+- Do not add actors, user goals, flows, validation rules, error states, permissions, acceptance criteria, non-goals, examples, or success criteria unless they are already present in the draft.
+- Do not choose architecture, frameworks, libraries, database schemas, API designs, file structures, implementation patterns, or test frameworks.
+- Do not turn the feature prompt into an implementation plan or a specification.
+- Do not append instructions about how another agent should interpret the prompt unless the user explicitly asks for that.
 
 ## Output Format
 
@@ -67,17 +63,16 @@ Notes:
 - ...
 ```
 
-Omit `Notes` when there is nothing important to flag. Use notes only for preserved assumptions, wording changes that may affect meaning, or optional improvements the user may want to decide later.
+Omit `Notes` by default. Use notes only to flag a wording ambiguity that could not be resolved without changing meaning.
 
 ## Quality Checklist
 
 Before finalizing, verify that the refined prompt:
 
 - Uses clear, idiomatic English.
-- Has one explicit objective.
-- Defines the expected output.
-- Avoids vague qualifiers or replaces them with observable criteria.
-- Separates requirements from optional preferences.
+- Preserves the user's original intent, scope, and level of detail.
+- Does not expand the prompt with missing requirements.
+- Does not add agent-facing meta-instructions.
+- Keeps vague qualifiers when replacing them would require a new product decision.
 - Avoids unnecessary technical choices.
 - Contains no hidden assumptions presented as facts.
-- Gives the receiving agent enough context to act without guessing.
