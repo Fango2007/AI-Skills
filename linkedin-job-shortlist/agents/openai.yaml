@@ -1,0 +1,4 @@
+interface:
+  display_name: "LinkedIn Job Shortlist"
+  short_description: "Extract and score LinkedIn job offers slowly and safely."
+  default_prompt: "Find LinkedIn job offers that match my criteria and generate a structured shortlist spreadsheet."

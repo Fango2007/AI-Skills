@@ -1,0 +1,4 @@
+interface:
+  display_name: "Public Writer"
+  short_description: "Interview-driven LinkedIn post outlines"
+  default_prompt: "Use $public-writer to interview me and turn my AI-related thoughts into a non-generic LinkedIn post outline."
