@@ -1,6 +1,6 @@
 # AI Skills
 
-This repository contains custom Codex skills. Each skill is a focused workflow packaged as a directory with a `SKILL.md` file, optional reference material, scripts, and agent configuration.
+This repository contains reusable AI-agent skills. Each skill is a focused workflow packaged as a directory with a `SKILL.md` file, optional reference material, scripts, and agent configuration. They can be used with Codex, but the workflows are not inherently Codex-only.
 
 ## Skills
 
