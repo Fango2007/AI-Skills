@@ -179,13 +179,15 @@ Priority labels:
 
 For every screening run, calculate requirement statistics from all job offers whose detail pages were screened in that run, including offers that were not added to the shortlist.
 
+If the user asks to continue screening or reassessing a stored workbook across multiple 5-job batches, treat those batches as one continuous screening campaign. In that case, `Requirement Stats` must be cumulative across every job successfully screened in the campaign so far, not only the latest batch.
+
 Counting rules:
 - Count each normalized requirement item at most once per job, even if the posting repeats it.
-- Use the number of screened jobs in the run as the percentage denominator.
+- Use the number of successfully screened jobs in the current screening campaign as the percentage denominator.
 - Calculate `percentage = jobs_requiring_item / screened_jobs * 100`.
 - Keep minimum and preferred requirements separate in the `requirement_type` field, but merge them for the main item percentage unless the distinction is important for interpretation.
 - Order rows by `category`, then descending `percentage`, then requirement item alphabetically.
-- Recalculate the sheet on each new screening run; replace the previous run's statistics rather than appending stale rows.
+- Recalculate the sheet after each batch; replace the previous statistics with the cumulative statistics for the campaign so far rather than appending stale rows.
 - If no job details were successfully screened, leave the prior statistics untouched and report that no recalculation was possible.
 - If the workbook has no prior `Requirement Stats` sheet and no job details were successfully screened, create the sheet with headers and a note that statistics will be populated after the next screening run.
 
@@ -227,3 +229,17 @@ The `Requirement Stats` columns must be ordered:
 Format `Percentage` as a percentage or as a number with a `%` suffix. `Example sources` should contain concise company/role references, not full job descriptions.
 
 Read `references/schema.md` if exact JSON shape or validation examples are needed.
+
+## Maintenance
+
+When this skill is edited, also sync every embedded plugin copy of the same skill before reporting completion.
+
+Required sync targets:
+- Standalone skill directory: `/Users/Fango/.codex/skills/linkedin-job-shortlist`
+- Embedded plugin skill directories matching: `/Users/Fango/.codex/plugins/cache/**/linkedin-job-shortlist*/skills/linkedin-job-shortlist`
+
+Sync at least:
+- `SKILL.md`
+- `references/schema.md`
+
+After syncing, verify the standalone and embedded plugin copies with `diff` or hashes. If an embedded plugin cache path cannot be written because of filesystem permissions, request approval and retry; do not silently leave copies divergent.

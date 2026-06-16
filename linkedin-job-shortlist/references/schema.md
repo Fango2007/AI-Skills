@@ -79,7 +79,8 @@ Validation rules:
 - Use `Unknown` for missing `work_mode`, `contract`, or `salary_rate`.
 - Keep `gaps` and `red_flags` concise, factual, and based on extracted posting text.
 - `requirements` must contain normalized, atomic requirement items from the active job description, including jobs screened but not shortlisted.
-- `requirement_stats` must be recalculated from the current screening run and written to a `Requirement Stats` worksheet.
+- `requirement_stats` must be recalculated from the current screening run or continued screening campaign and written to a `Requirement Stats` worksheet.
 - `requirement_stats.percentage` must be `jobs_requiring_item / screened_jobs * 100`.
 - Count a requirement item at most once per job.
 - Order requirement statistics by category, descending percentage, then requirement text.
+- For multi-batch workbook reassessments, `screened_jobs` is cumulative across all jobs successfully screened in that campaign so far, not just the latest 5-job batch.
