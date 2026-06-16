@@ -31,7 +31,41 @@ Use this JSON shape for extracted jobs and spreadsheet generation.
       "salary_rate": "Unknown",
       "published_age": "1 week ago",
       "gaps": "Full-time employee role, not contract. Requires up to 50% travel.",
-      "red_flags": "Hybrid 3 days/week in office; no salary/rate shown."
+      "red_flags": "Hybrid 3 days/week in office; no salary/rate shown.",
+      "requirements": [
+        {
+          "category": "Experience",
+          "item": "Customer-facing technical delivery",
+          "requirement_type": "minimum",
+          "evidence": "customer-facing technical role"
+        },
+        {
+          "category": "Languages",
+          "item": "Python",
+          "requirement_type": "preferred",
+          "evidence": "Python or similar language"
+        }
+      ]
+    }
+  ],
+  "requirement_stats": [
+    {
+      "category": "Experience",
+      "requirement": "Customer-facing technical delivery",
+      "jobs_requiring_item": 1,
+      "screened_jobs": 1,
+      "percentage": 100,
+      "requirement_type": "minimum",
+      "example_sources": "OpenAI - Forward Deployed Engineer - Paris"
+    },
+    {
+      "category": "Languages",
+      "requirement": "Python",
+      "jobs_requiring_item": 1,
+      "screened_jobs": 1,
+      "percentage": 100,
+      "requirement_type": "preferred",
+      "example_sources": "OpenAI - Forward Deployed Engineer - Paris"
     }
   ]
 }
@@ -44,3 +78,8 @@ Validation rules:
 - `priority` must be one of `Apply first`, `High`, `Medium`, `Maybe`, or `Skip`.
 - Use `Unknown` for missing `work_mode`, `contract`, or `salary_rate`.
 - Keep `gaps` and `red_flags` concise, factual, and based on extracted posting text.
+- `requirements` must contain normalized, atomic requirement items from the active job description, including jobs screened but not shortlisted.
+- `requirement_stats` must be recalculated from the current screening run and written to a `Requirement Stats` worksheet.
+- `requirement_stats.percentage` must be `jobs_requiring_item / screened_jobs * 100`.
+- Count a requirement item at most once per job.
+- Order requirement statistics by category, descending percentage, then requirement text.
