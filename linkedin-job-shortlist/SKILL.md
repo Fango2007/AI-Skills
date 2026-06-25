@@ -1,6 +1,6 @@
 ---
 name: linkedin-job-shortlist
-description: Extract, evaluate, rank, and export LinkedIn job offers for a candidate using configurable match criteria. Use when Codex is asked to search LinkedIn jobs, shortlist job offers, score job descriptions against personal criteria, avoid LinkedIn rate limits, or generate a spreadsheet of LinkedIn job matches with publication age, gaps, red flags, and priority.
+description: Extract, evaluate, rank, and export LinkedIn job offers for a candidate using configurable match criteria and a resume-derived baseline. Use when Codex is asked to search LinkedIn jobs, shortlist job offers, score job descriptions against personal criteria, avoid LinkedIn rate limits, analyze job requirements/gaps/red flags, or generate a spreadsheet of LinkedIn job matches with publication age, requirement statistics, gaps, and priority.
 ---
 
 # LinkedIn Job Shortlist
@@ -15,6 +15,20 @@ Hard limits:
 - Do not include jobs older than 14 days unless the user explicitly overrides this.
 - Stop immediately if LinkedIn shows an auth wall, CAPTCHA, suspicious activity warning, `ERR_HTTP_RESPONSE_CODE_FAILURE`, repeated failed navigations, or any rate-limit-like behavior.
 - Do not apply, save, message, submit, or change account settings unless the user explicitly asks and confirms the exact action.
+
+## Progress Tracking
+
+For long runs or workbook reassessments, show short progress updates before each phase. Keep updates compact and factual:
+
+```text
+[####----------------] 20% - Phase 1/5: Loading baseline and criteria
+[########------------] 40% - Phase 2/5: Extracting LinkedIn job details
+[############--------] 60% - Phase 3/5: Analyzing requirements and gaps
+[################----] 80% - Phase 4/5: Updating workbook and statistics
+[####################] 100% - Phase 5/5: Validating workbook
+```
+
+Use plain ASCII progress bars. Do not let progress tracking override the LinkedIn pacing rules. If a batch stops early because of an edge case, report the exact stopping point and whether the workbook was updated.
 
 ## Criteria
 
@@ -34,7 +48,7 @@ Initial baseline workflow:
    - inferred or adjacent capabilities;
    - missing or not-evidenced capabilities;
    - user-confirmed corrections that narrow, strengthen, or contradict the CV wording.
-5. Ask only high-impact grounding questions that affect screening gates, such as production delivery, hands-on backend depth, specific languages/frameworks, databases, cloud/platform ownership, AI/LLM/RAG/agent production usage, monitoring/support, and current target constraints.
+5. Ask only high-impact grounding questions that affect screening gates, such as production delivery, hands-on role depth, specific languages/frameworks/tools, databases, cloud/platform ownership, domain-specific production usage, monitoring/support, certifications/licenses, and current target constraints.
 6. Persist the reviewed baseline with resume sources, review date, and user-confirmed facts before scoring any job.
 
 Ongoing baseline workflow:
@@ -58,8 +72,8 @@ Default criteria shape:
 ```yaml
 target_titles:
   - Forward Deployed Engineer
-  - Applied AI Engineer
-  - Chef de projet IA
+  - Solution Architect
+  - Applied Engineer
 preferred_locations:
   - Paris
   - Europe
@@ -67,17 +81,18 @@ remote_rules: Paris or Europe; remote/hybrid preferred
 minimum_compensation: EUR 80K salary or EUR 700 HT day rate
 preferred_contract: contract worker preferred
 industries: no preference
-must_have_technologies:
-  - AI-related technologies
-  - AI providers
+target_domain: configurable, for example AI, cybersecurity, platform engineering, product management, data, sales, or finance
+must_have_themes:
+  - target-domain related work
+  - candidate-supported strengths
 dealbreakers:
-  - not or poorly related to AI
-  - pure management without hands-on practice
+  - not or poorly related to target domain
+  - pure management without requested hands-on practice
 role_style:
   - hands-on engineering
   - tech lead
   - architect
-  - management only if strongly related to AI
+  - management only if strongly related to target domain
 candidate_baseline:
   source: outputs/linkedin_job_shortlist/candidate_baseline.yml
   evidence_levels:
@@ -88,6 +103,8 @@ max_posting_age_days: 14
 batch_size: 5
 delay_between_detail_views_seconds: 30
 ```
+
+The default criteria above are examples, not hard-coded AI rules. When a user or workbook defines a target domain, use that domain for relevance scoring and requirement statistics. If no target domain is stated, infer a broad domain from the job search/query and confirm only when the ambiguity materially changes scoring.
 
 ## Browser Workflow
 
@@ -125,17 +142,41 @@ Use `Unknown` for missing fields. Do not infer salary/rate unless the posting ex
 For `requirements`, capture atomic requirement items from the active job description. Include requirements from jobs that are screened but ultimately skipped; statistics are about the screened market, not only retained shortlist rows.
 
 Each requirement item must include:
-- `category`: one of `Qualifications`, `Experience`, `Languages`, `Frameworks & Libraries`, `AI/ML & MLOps`, `Data & Databases`, `Cloud & Infrastructure`, or `Other`
-- `item`: a normalized requirement label, for example `Production AI product shipping`, `Python`, `PostgreSQL`, `Kubernetes`, or `Solution architecture`
+- `category`: one of `Qualifications`, `Experience`, `Languages`, `Frameworks & Libraries`, `Domain & Technical`, `Data & Databases`, `Cloud & Infrastructure`, `Soft Skills & Culture`, or `Other`
+- `item`: a normalized requirement label, for example `Production domain delivery`, `Python`, `PostgreSQL`, `Kubernetes`, or `Solution architecture`
 - `requirement_type`: `minimum`, `preferred`, or `unclear`
 - `evidence`: a short phrase from the posting showing why the item was extracted
 
-Normalize obvious synonyms before counting, for example `JS` to `JavaScript`, `Postgres` to `PostgreSQL`, `K8s` to `Kubernetes`, and `LLMOps`/`MLOps` to the exact wording used in the posting when the distinction matters.
+Normalize obvious synonyms before counting, for example `JS` to `JavaScript`, `Postgres` to `PostgreSQL`, `K8s` to `Kubernetes`, and domain-specific terms such as `LLMOps`/`MLOps` to the exact wording used in the posting when the distinction matters.
+
+## Job Description Analysis
+
+For each screened job, run a compact analysis inspired by the `job-description-analyzer` skill, but return concise structured facts for the shortlist workflow rather than a long application report.
+
+1. Extract requirements:
+   - `minimum`: must-have requirements, including requirements under headings such as `Requirements`, `Basic qualifications`, `You have`, or items repeated as central responsibilities.
+   - `preferred`: nice-to-have requirements, including `preferred`, `bonus`, `nice to have`, `ideally`, or `a plus`.
+   - `unclear`: requirements where the posting does not distinguish strictness.
+2. Extract keywords:
+   - hard skills: tools, languages, frameworks, platforms, methods, certifications;
+   - soft skills: communication, leadership, collaboration, ambiguity, stakeholder management;
+   - domain terms: industry, regulatory, customer segment, product type, operational context.
+3. Classify gaps against the baseline:
+   - `critical`: central minimum or dealbreaker missing from the baseline;
+   - `major`: important requirement missing or only adjacent;
+   - `minor`: preferred, learnable, or non-central missing item.
+4. Detect red flags:
+   - workload or scope creep: `wear many hats`, `fast-paced`, `hit the ground running`, unrealistic breadth;
+   - culture language: `rockstar`, `ninja`, `family`, unclear ownership;
+   - compensation/contract opacity: no range, equity-heavy, commission-only, unclear status;
+   - hiring/process signals: reposted many times, no longer accepting, vague third-party listing, excessive travel/relocation/authorization constraints.
+
+Use this analysis to populate `requirements`, `gaps`, and `red_flags`. Do not generate cover-letter strategy or resume customization unless the user asks for application preparation.
 
 ## Scoring
 
 Score from 0 to 100:
-- AI relevance: 30 points
+- Target-domain relevance: 30 points
 - Hands-on engineering depth: 20 points
 - Role/title fit: 15 points
 - Location/work-mode fit: 10 points
@@ -147,24 +188,26 @@ Qualification gates:
 - Always distinguish `minimum qualifications` from `preferred qualifications`.
 - If a posting has an explicit minimum qualification that the CV does not evidence, record it in `gaps` and `red_flags`.
 - If the missing minimum is central to the role, cap priority at `Maybe`; cap score at 64 unless there is strong adjacent evidence and the user wants stretch roles.
-- If a posting requires several years of `production AI`, `production GenAI`, `shipping AI-driven solutions`, or equivalent, do not satisfy that requirement with general production systems experience. Credit general production systems experience as adjacent strength only when the baseline supports it, but treat production AI delivery as missing unless the baseline shows shipped AI systems used by real users/customers.
-- If production AI delivery is limited or prototype-only, roles requiring 5+ or 6+ years shipping production AI should normally be `Maybe` or `Skip`, not `High` or `Apply first`.
-- Preferred qualifications such as LangGraph, CrewAI, Google ADK, ReAct, multi-agent orchestration, eval frameworks, or agent reliability should reduce score when absent, but they are not dealbreakers unless listed as minimum requirements.
 - `Apply first` requires no critical minimum-qualification gap.
 
-Production AI delivery evidence requires at least one of:
-- shipped RAG, agent, LLM, ML, or AI-assisted product/workflow to real users or customers;
+Production delivery evidence requires at least one of:
+- shipped work in the target domain to real users, customers, operations teams, or stakeholders;
 - production integration with APIs, data sources, identity/security controls, logging, monitoring, evaluation, support, or release process;
 - measurable adoption, business impact, reliability, or usage in an operational setting.
 
-Use the baseline to decide whether this evidence exists. If the baseline marks production AI delivery as `not_evidenced`, do not override that from job-title similarity, general systems experience, prototypes, studies, or AI-assisted coding practice.
+Use the baseline to decide whether this evidence exists. If the baseline marks a domain capability as `not_evidenced`, do not override that from title similarity, general adjacent experience, prototypes, studies, or tooling familiarity.
 
-Backend/product AI gate:
+Backend/product engineering gate:
 - If a posting requires `Backend Engineer`, `Software Engineer`, or similar product-engineering experience, distinguish architecture/platform/security leadership from recent hands-on product backend delivery.
 - Do not satisfy product backend requirements with architecture, operations leadership, security architecture, presales, or project management alone unless the baseline explicitly marks recent hands-on backend product delivery as evidenced.
 - If the posting is balanced toward architecture, platform, security, integration, or technical leadership, credit adjacent experience and cap at `Maybe` when hands-on backend evidence is missing.
 - If the posting is primarily product-feature backend development with APIs, services, tests, CI/CD, production releases, or debugging production application code, and the baseline does not evidence current hands-on backend delivery, normally score `Skip` or low `Maybe`.
 - Treat NodeJS, TypeScript, PostgreSQL, SQL, and ORM requirements according to the baseline. Python can satisfy the language requirement only when the posting explicitly accepts Python or similar languages and the baseline evidences enough Python for the role level.
+
+Domain gate profiles:
+- Apply only gate profiles relevant to the posting and the user's target domain.
+- For AI/ML/GenAI/agentic roles, if a posting requires several years of `production AI`, `production GenAI`, `shipping AI-driven solutions`, `shipped real AI products`, `AI at scale`, or equivalent, do not satisfy that requirement with general production systems experience. Credit general production systems experience as adjacent strength only when the baseline supports it, but treat production AI delivery as missing unless the baseline shows shipped AI systems used by real users/customers.
+- For AI/ML/GenAI/agentic roles, preferred qualifications such as LangGraph, CrewAI, Google ADK, ReAct, multi-agent orchestration, eval frameworks, or agent reliability should reduce score when absent, but they are not dealbreakers unless listed as minimum requirements.
 - Treat `shipped real AI products`, `shipped AI features`, `debugged production AI issues`, `AI at scale`, and similar phrases as central production-AI requirements. If not evidenced, record the gap and cap at `Maybe`; use `Skip` when this is paired with missing backend-stack requirements.
 - Treat `shipped production features using Claude` or `used Claude to ship real products` as missing unless there is explicit evidence that Claude-assisted code reached real users. General AI-assisted coding, Codex/Claude experimentation, modernization studies, or prototypes do not satisfy this.
 
@@ -192,6 +235,20 @@ Counting rules:
 - If the workbook has no prior `Requirement Stats` sheet and no job details were successfully screened, create the sheet with headers and a note that statistics will be populated after the next screening run.
 
 The statistics are descriptive market data. Do not use them to soften candidate qualification gates; scoring still depends on the candidate baseline and the job's central requirements.
+
+## Edge Cases
+
+Handle edge cases explicitly and preserve auditability:
+
+- No job description or inaccessible detail body: score from visible title/header only if useful, mark confidence as reduced in `red_flags`, and exclude the job from requirement statistics unless enough requirements are visible.
+- Vague or recruiter-only posting: extract available signals, mark sparse details as a red flag, and avoid overconfident scoring.
+- Multiple roles in one posting: identify the primary role from title, heading, and repeated responsibilities; flag scope creep if unrelated responsibilities are central.
+- Non-English posting: analyze in the posting language. Translate normalized requirement labels to English only when writing stats or workbook summaries.
+- Reposted or no longer accepting: keep the row if already stored, but record the status in `red_flags` and apply the priority penalty.
+- Missing resume/baseline: do not calculate a match score. Create or review the baseline first.
+- Candidate correction during screening: update the baseline before scoring additional jobs, then state which rows were scored before and after the correction.
+- Domain mismatch: if the job is outside the target domain, score target-domain relevance low even if seniority/location are attractive.
+- Overqualification or underqualification: flag when the role is far below or far above the baseline; do not hide this inside the numeric score.
 
 ## Spreadsheet Output
 

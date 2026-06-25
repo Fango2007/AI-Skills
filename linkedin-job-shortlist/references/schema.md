@@ -5,26 +5,27 @@ Use this JSON shape for extracted jobs and spreadsheet generation.
 ```json
 {
   "criteria": {
-    "target_titles": ["Forward Deployed Engineer", "Applied AI Engineer", "Chef de projet IA"],
+    "target_titles": ["Forward Deployed Engineer", "Solution Architect", "Applied Engineer"],
     "preferred_locations": ["Paris", "Europe"],
     "remote_rules": "Paris or Europe; remote/hybrid preferred",
     "minimum_compensation": "EUR 80K salary or EUR 700 HT day rate",
     "preferred_contract": "contract worker preferred",
     "industries": "no preference",
-    "must_have_technologies": ["AI-related technologies", "AI providers"],
-    "dealbreakers": ["not or poorly related to AI", "pure management without hands-on practice"],
-    "role_style": ["hands-on engineering", "tech lead", "architect", "AI-related management only"],
+    "target_domain": "AI, cybersecurity, platform engineering, product management, data, sales, finance, or another user-defined domain",
+    "must_have_themes": ["target-domain related work", "candidate-supported strengths"],
+    "dealbreakers": ["not or poorly related to target domain", "pure management without requested hands-on practice"],
+    "role_style": ["hands-on engineering", "tech lead", "architect", "domain-related management only"],
     "max_posting_age_days": 14,
     "batch_size": 5,
     "delay_between_detail_views_seconds": 30
   },
   "jobs": [
     {
-      "company": "OpenAI",
-      "role": "Forward Deployed Engineer - Paris",
+      "company": "ExampleCorp",
+      "role": "Solution Architect - Paris",
       "match_score": 94,
       "priority": "Apply first",
-      "url": "https://www.linkedin.com/jobs/view/4417168168/",
+      "url": "https://www.linkedin.com/jobs/view/0000000000/",
       "location": "Paris",
       "work_mode": "Hybrid",
       "contract": "Full-time",
@@ -37,13 +38,15 @@ Use this JSON shape for extracted jobs and spreadsheet generation.
           "category": "Experience",
           "item": "Customer-facing technical delivery",
           "requirement_type": "minimum",
-          "evidence": "customer-facing technical role"
+          "evidence": "customer-facing technical role",
+          "gap_severity": "minor"
         },
         {
           "category": "Languages",
           "item": "Python",
           "requirement_type": "preferred",
-          "evidence": "Python or similar language"
+          "evidence": "Python or similar language",
+          "gap_severity": "none"
         }
       ]
     }
@@ -56,7 +59,7 @@ Use this JSON shape for extracted jobs and spreadsheet generation.
       "screened_jobs": 1,
       "percentage": 100,
       "requirement_type": "minimum",
-      "example_sources": "OpenAI - Forward Deployed Engineer - Paris"
+      "example_sources": "ExampleCorp - Solution Architect - Paris"
     },
     {
       "category": "Languages",
@@ -65,7 +68,7 @@ Use this JSON shape for extracted jobs and spreadsheet generation.
       "screened_jobs": 1,
       "percentage": 100,
       "requirement_type": "preferred",
-      "example_sources": "OpenAI - Forward Deployed Engineer - Paris"
+      "example_sources": "ExampleCorp - Solution Architect - Paris"
     }
   ]
 }
@@ -79,6 +82,8 @@ Validation rules:
 - Use `Unknown` for missing `work_mode`, `contract`, or `salary_rate`.
 - Keep `gaps` and `red_flags` concise, factual, and based on extracted posting text.
 - `requirements` must contain normalized, atomic requirement items from the active job description, including jobs screened but not shortlisted.
+- `requirements.category` must be one of `Qualifications`, `Experience`, `Languages`, `Frameworks & Libraries`, `Domain & Technical`, `Data & Databases`, `Cloud & Infrastructure`, `Soft Skills & Culture`, or `Other`.
+- `requirements.gap_severity` is optional and, when present, must be one of `none`, `minor`, `major`, or `critical`.
 - `requirement_stats` must be recalculated from the current screening run or continued screening campaign and written to a `Requirement Stats` worksheet.
 - `requirement_stats.percentage` must be `jobs_requiring_item / screened_jobs * 100`.
 - Count a requirement item at most once per job.
